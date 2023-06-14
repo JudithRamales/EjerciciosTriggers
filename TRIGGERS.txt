@@ -1,0 +1,104 @@
+---------------------------------------------------------------------------------------EJERCICIOS TRIGGERS
+create table tb_a (
+id number (12), 
+nombre_p varchar (50), 
+tipo varchar (35),
+costo number (10));
+
+create table tb_b (
+descripcion varchar (200),
+fecha TIMESTAMP
+);
+
+select * from tb_a;
+select * from tb_b;
+
+-----------Insertar datos en la tabla A
+insert into tb_a values (001, 'donitas', 'pan', 20);
+insert into tb_a values (002, 'rebanada', 'pan', 10);
+insert into tb_a values (003, 'mantecadas', 'pan', 25);
+insert into tb_a values (004, 'nito', 'pan', 15);
+insert into tb_a values (005, 'buñuelos', 'pan', 20);
+insert into tb_a values (021, 'doritos', 'botana', 15);
+insert into tb_a values (022, 'paketaxo', 'botana', 56);
+insert into tb_a values (023, 'Sabritas adobadas', 'botana', 35);
+insert into tb_a values (024, 'crujitos', 'botana', 15);
+insert into tb_a values (025, 'sabritones', 'botana', 50);
+insert into tb_a values (051, 'pulparindo', 'dulce', 8);
+insert into tb_a values (052, 'picafresa', 'dulce', 2);
+insert into tb_a values (053, 'mazapan', 'dulce', 8);
+insert into tb_a values (054, 'panditas', 'dulce', 18);
+insert into tb_a values (055, 'dragoncito', 'dulce', 3);
+insert into tb_a values (056, 'coca-cola', 'refresco', 38);
+
+-------------CREACION DEL TRIGGER INSERTAR, ALTERAR, ELIMINAR EN LA TABLA A
+CREATE OR REPLACE TRIGGER tr_ins_alt_eli
+AFTER INSERT OR UPDATE OR DELETE ON tb_a
+FOR EACH ROW
+BEGIN
+  IF INSERTING THEN
+    INSERT INTO tb_b (descripcion) VALUES ('Se ha insertado un dato '|| 'ID: ' || :NEW.id || ' Nombre: ' || :NEW.nombre_p || ' Tipo: ' || :NEW.tipo ||
+  ' Costo: ' || :NEW.costo );
+  ELSIF UPDATING THEN
+    INSERT INTO tb_b (descripcion) VALUES ('Se ha actualizado un dato ' || 'ID: ' || :old.id || ' Por ' || :new.id || ' Nombre: ' || :OLD.nombre_p || ' Por ' ||
+    :NEW.nombre_p || ' Tipo: ' || :OLD.tipo || ' Por ' || :NEW.tipo || ' Costo: ' || :OLD.costo || ' Por ' || :NEW.costo);
+  ELSIF DELETING THEN
+    INSERT INTO tb_b (descripcion) VALUES ('Se ha eliminado un dato ' || 'ID: ' || :old.id || ' Nombre: ' || :OLD.nombre_p || ' Tipo: ' || :OLD.tipo ||
+  ' Costo: ' || :OLD.costo );
+  END IF;
+END;
+
+
+----------instruccion para alterar un dato de la tabla A
+UPDATE tb_a SET nombre_p='red cola' WHERE nombre_p='coca-cola';
+UPDATE tb_a SET nombre_p='pepsi' WHERE nombre_p='red cola';
+UPDATE tb_a SET costo=5 WHERE costo=3 and nombre_p='dragoncito';
+
+----------instruccion para borrar un dato de la tabla A 
+DELETE FROM tb_a WHERE id=56;
+DELETE FROM tb_a WHERE id=55;
+DELETE FROM tb_a WHERE id=57;
+
+
+
+
+
+
+--------------------CREACION DE TRIGGER DE PRODUCTO QUE EMPIECE CON D 
+CREATE OR REPLACE TRIGGER tr_nombre_d
+AFTER INSERT ON tb_a
+FOR EACH ROW
+DECLARE
+    V_fecha TIMESTAMP;
+BEGIN
+    SELECT SYSTIMESTAMP INTO V_fecha FROM DUAL;
+    IF SUBSTR(:NEW.nombre_p, 1, 1) = 'd' THEN
+        INSERT INTO tb_b (descripcion, fecha)
+        VALUES ('Se agregó un producto y su nombre empieza con d', TO_CHAR(V_fecha, 'DD/MM/YYYY HH24:MI:SS'));
+    END IF;
+END;
+
+------------insertar datos en la tabla A que comienzen con la letra 'd'
+insert into tb_a values ('055', 'dragoncito', 'dulce', 3);
+insert into tb_a values ('057', 'danone', 'yougurt', 30);
+
+
+
+
+
+
+
+------------------CREACION DEL TRIGGER MOSTRAR MENSAJE AL ELIMINAR PRODUCTOS MENOR O IGUAL A 12
+CREATE OR REPLACE TRIGGER tr_elim_prod_doce
+AFTER DELETE ON tb_a
+FOR EACH ROW
+BEGIN
+  IF :OLD.costo <= 12 THEN
+    INSERT INTO tb_b (descripcion) VALUES ('Se eliminó un producto humilde que quería comprar con lo que tenía de mi pasaje :,c');
+  END IF;
+END;
+
+-----------INSTRUCCION QUE ELIMINA PRODUCTOS MENOR O IGUAL A 12
+DELETE FROM tb_a WHERE nombre_p='picafresa';
+DELETE FROM tb_a WHERE nombre_p='mazapan';
+
